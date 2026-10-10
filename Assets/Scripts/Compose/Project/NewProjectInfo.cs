@@ -6,6 +6,7 @@ namespace ArcCreate.Compose.Project
     {
         public FilePath ProjectFile;
         public string StartingChartPath;
+        public bool UseInscribedPreset;
         public float BaseBPM;
         public FilePath AudioPath;
         public FilePath JacketPath;

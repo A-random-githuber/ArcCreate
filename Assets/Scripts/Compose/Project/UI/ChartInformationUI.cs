@@ -104,6 +104,7 @@ namespace ArcCreate.Compose.Project
             GameplayData.OnChartTimingEdit += OnChartTimingEdit;
             GameplayData.BaseBpm.OnValueChange += OnGameplayBaseBpm;
             GameplayData.AudioClip.OnValueChange += OnAudioClip;
+            Services.Project.OnDifficultyPresetChange += OnDifficultyPresetChange;
 
             for (int i = 0; i < diffColorPresets.Count; i++)
             {
@@ -141,12 +142,25 @@ namespace ArcCreate.Compose.Project
             GameplayData.OnChartTimingEdit -= OnChartTimingEdit;
             GameplayData.BaseBpm.OnValueChange -= OnGameplayBaseBpm;
             GameplayData.AudioClip.OnValueChange -= OnAudioClip;
+            Services.Project.OnDifficultyPresetChange -= OnDifficultyPresetChange;
 
             for (int i = 0; i < diffColorPresets.Count; i++)
             {
                 Button btn = diffColorPresets[i];
                 btn.onClick.RemoveAllListeners();
             }
+        }
+
+        private void OnDifficultyPresetChange(ChartSettings chart)
+        {
+            if (chart != Target)
+            {
+                return;
+            }
+
+            difficultyName.SetTextWithoutNotify(chart.Difficulty ?? "");
+            chart.DifficultyColor.ConvertHexToColor(out Color color);
+            difficultyColor.SetValueWithoutNotify(color);
         }
 
         private void OnChartOffset(string value)

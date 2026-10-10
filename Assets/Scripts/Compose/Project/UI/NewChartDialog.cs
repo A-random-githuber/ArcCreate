@@ -14,6 +14,8 @@ namespace ArcCreate.Compose.Project
         [SerializeField] private GameObject warningObject;
         [SerializeField] private TMP_Text warningText;
 
+        private ChartFilePathInputField chartFilePathInput;
+
         private void OnConfirm(string name)
         {
             if (string.IsNullOrEmpty(name) || name == "remote")
@@ -28,6 +30,15 @@ namespace ArcCreate.Compose.Project
             {
                 if (chart.ChartPath == fullName)
                 {
+                    if (chartFilePathInput.IsDifficultyAliasPreset)
+                    {
+                        warningObject.SetActive(false);
+                        chartNameField.text = string.Empty;
+                        Close();
+                        Services.Project.ApplyDifficultyPreset(chart, chartFilePathInput.UseInscribedPreset);
+                        return;
+                    }
+
                     warningObject.SetActive(true);
                     warningText.text = I18n.S("Compose.Exception.ChartFileAlreadyExists");
                     return;
@@ -37,7 +48,7 @@ namespace ArcCreate.Compose.Project
             warningObject.SetActive(false);
             chartNameField.text = string.Empty;
             Close();
-            Services.Project.CreateNewChart(fullName);
+            Services.Project.CreateNewChart(fullName, chartFilePathInput.UseInscribedPreset);
         }
 
         private void OnConfirmButton()
@@ -47,6 +58,7 @@ namespace ArcCreate.Compose.Project
 
         private void Awake()
         {
+            chartFilePathInput = chartNameField.GetComponentInParent<ChartFilePathInputField>();
             chartNameField.text = string.Empty;
             chartNameField.onEndEdit.AddListener(OnConfirm);
             confirmButton.onClick.AddListener(OnConfirmButton);

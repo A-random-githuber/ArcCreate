@@ -29,6 +29,8 @@ namespace ArcCreate.ChartFormat
 
         public bool Autoplay { get; set; } = false;
 
+        public string TraceColor { get; set; } = null;
+
         public Dictionary<JudgementMap, JudgementMap> JudgementMaps { get; set; }
             = new Dictionary<JudgementMap, JudgementMap>();
 
@@ -125,6 +127,20 @@ namespace ArcCreate.ChartFormat
                         case "droprate":
                             valid = Evaluator.TryFloat(value, out val);
                             tg.DropRate = valid ? val : 0;
+                            break;
+                        case "tracecol":
+                            if (tokens.Length != 2 || !IsRgbHexColor(value))
+                            {
+                                return ChartError.Property(
+                                    def,
+                                    lineNumber,
+                                    RawEventType.TimingGroup,
+                                    optRaw.StartPos,
+                                    optRaw.Length,
+                                    ChartError.Kind.TimingGroupPropertiesInvalid);
+                            }
+
+                            tg.TraceColor = value.ToLowerInvariant();
                             break;
                         case "max":
                             AddRemapRules(tg, value, JudgementMap.Max);
@@ -332,6 +348,11 @@ namespace ArcCreate.ChartFormat
                 opts.Add("autoplay");
             }
 
+            if (TraceColor != null)
+            {
+                opts.Add($"tracecol={TraceColor}");
+            }
+
             if (NoConnection)
             {
                 opts.Add("noconnection");
@@ -447,6 +468,27 @@ namespace ArcCreate.ChartFormat
             }
 
             return opts;
+        }
+
+        private static bool IsRgbHexColor(string value)
+        {
+            if (value.Length < 1 || value.Length > 6)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < value.Length; i++)
+            {
+                char c = value[i];
+                if (!((c >= '0' && c <= '9')
+                   || (c >= 'a' && c <= 'f')
+                   || (c >= 'A' && c <= 'F')))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private string GetStringFrom(JudgementMap j)

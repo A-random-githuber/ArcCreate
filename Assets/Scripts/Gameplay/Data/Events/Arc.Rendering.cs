@@ -263,7 +263,7 @@ namespace ArcCreate.Gameplay.Data
 
                 if (IsTrace)
                 {
-                    Services.Render.DrawTraceSegment(matrix * bodyMatrix, color, IsSelected, depth);
+                    Services.Render.DrawTraceSegment(matrix * bodyMatrix, color, groupProperties.TraceColor, IsSelected, depth);
                     if (!groupProperties.NoShadow)
                     {
                         Services.Render.DrawTraceShadow(matrix * shadowMatrix, color);
@@ -294,7 +294,7 @@ namespace ArcCreate.Gameplay.Data
             {
                 if (IsTrace)
                 {
-                    Services.Render.DrawTraceHead(matrix, color, IsSelected);
+                    Services.Render.DrawTraceHead(matrix, color, groupProperties.TraceColor, IsSelected);
                 }
                 else
                 {

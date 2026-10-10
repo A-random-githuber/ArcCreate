@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using ArcCreate.ChartFormat;
+using ArcCreate.Gameplay.Data;
 using NSubstitute;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace Tests.Unit
 {
@@ -239,6 +241,48 @@ namespace Tests.Unit
 
             Assert.That(e.NoClip, Is.True);
             Assert.That(e.AngleY, Is.EqualTo(30));
+        }
+
+        [TestCase("0", "0")]
+        [TestCase("e", "e")]
+        [TestCase("ee", "ee")]
+        [TestCase("ff33", "ff33")]
+        [TestCase("eeee00", "eeee00")]
+        [TestCase("12ABef", "12abef")]
+        [TestCase("000000", "000000")]
+        public void ParseTimingGroupTraceColor(string input, string expected)
+        {
+            RawTimingGroup e = reader.ParseTimingGroup(
+                $"timinggroup(tracecol={input}){{", 0).UnwrapOrElse(AssertFail<RawTimingGroup>);
+
+            Assert.That(e.TraceColor, Is.EqualTo(expected));
+            Assert.That(e.ToString(), Is.EqualTo($"tracecol={expected}"));
+        }
+
+        [TestCase("")]
+        [TestCase("eeee000")]
+        [TestCase("gggggg")]
+        [TestCase("#eeee00")]
+        public void ParseTimingGroupTraceColorFail(string color)
+        {
+            AssertError(
+                reader.ParseTimingGroup($"timinggroup(tracecol={color}){{", 0),
+                ChartError.Kind.TimingGroupPropertiesInvalid);
+        }
+
+        [TestCase("0", "000000", "0")]
+        [TestCase("e", "E00000", "e")]
+        [TestCase("ee", "EE0000", "ee")]
+        [TestCase("ff33", "FF3300", "ff33")]
+        [TestCase("eeee00", "EEEE00", "eeee")]
+        [TestCase("0000ee", "0000EE", "0000ee")]
+        [TestCase("000000", "000000", "0")]
+        public void TimingGroupTraceColorRuntimeRoundTrip(string input, string expectedRgb, string expectedCompact)
+        {
+            GroupProperties properties = new GroupProperties(new RawTimingGroup { TraceColor = input });
+
+            Assert.That(ColorUtility.ToHtmlStringRGB(properties.TraceColor), Is.EqualTo(expectedRgb));
+            Assert.That(properties.ToRaw().TraceColor, Is.EqualTo(expectedCompact));
         }
 
         [TestCase("test.aff")]

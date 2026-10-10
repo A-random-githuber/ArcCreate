@@ -114,13 +114,14 @@ namespace ArcCreate.Gameplay.Render
             });
         }
 
-        public void DrawTraceSegment(Matrix4x4 matrix, Color color, bool selected, float depth)
+        public void DrawTraceSegment(Matrix4x4 matrix, Color color, Color traceColor, bool selected, float depth)
         {
             queuedTraceDrawCalls.Add(new ArcDrawCall
             {
                 Matrix = matrix,
                 Color = color,
                 Properties = new Vector4(selected ? 1 : 0, 0, 0, 0),
+                TraceColor = traceColor,
                 Depth = depth,
             });
         }
@@ -143,9 +144,9 @@ namespace ArcCreate.Gameplay.Render
             arcHeadDrawer.RegisterInstance(matrix, color, properties);
         }
 
-        public void DrawTraceHead(Matrix4x4 matrix, Color color, bool selected)
+        public void DrawTraceHead(Matrix4x4 matrix, Color color, Color traceColor, bool selected)
         {
-            traceHeadDrawer.RegisterInstance(matrix, color, new Vector4(selected ? 1 : 0, 0, 0, 0));
+            traceHeadDrawer.RegisterInstance(matrix, color, new Vector4(selected ? 1 : 0, 0, 0, 0), traceColor);
         }
 
         public void DrawArcCap(Texture texture, Matrix4x4 matrix, Color color, bool isController)
@@ -214,7 +215,8 @@ namespace ArcCreate.Gameplay.Render
                 traceSegmentDrawer.RegisterInstance(
                     call.Matrix,
                     call.Color,
-                    call.Properties);
+                    call.Properties,
+                    call.TraceColor);
             }
 
             traceSegmentDrawer.Draw(notesCamera, layer);
@@ -274,12 +276,14 @@ namespace ArcCreate.Gameplay.Render
             traceSegmentDrawer = new InstancedRendererPool(
                 material,
                 ArcMeshGenerator.GetSegmentMesh(true),
+                true,
                 true);
 
             traceHeadDrawer?.Dispose();
             traceHeadDrawer = new InstancedRendererPool(
                 material,
                 ArcMeshGenerator.GetHeadMesh(true),
+                true,
                 true);
 
             UpdateLoadedState();

@@ -49,6 +49,8 @@ namespace ArcCreate.Compose.Macros
 
         public bool Autoplay { get; set; }
 
+        public string TraceColor { get; set; }
+
         public float ArcResolution { get; set; }
 
         public float DropRate { get; set; }
@@ -130,6 +132,7 @@ namespace ArcCreate.Compose.Macros
                 EarlyJudgement = EarlyJudgement,
                 IgnoreMirror = IgnoreMirror,
                 Autoplay = Autoplay,
+                TraceColor = TraceColor,
                 ArcResolution = ArcResolution,
                 DropRate = DropRate,
                 AngleX = AngleX,
@@ -214,6 +217,7 @@ namespace ArcCreate.Compose.Macros
             SloppyJudgement = raw.SloppyJudgement;
             EarlyJudgement = raw.EarlyJudgement;
             Autoplay = raw.Autoplay;
+            TraceColor = raw.TraceColor;
             ArcResolution = raw.ArcResolution;
             AngleX = raw.AngleX;
             AngleY = raw.AngleY;

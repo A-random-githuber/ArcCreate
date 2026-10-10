@@ -39,6 +39,8 @@ namespace ArcCreate.Compose.Project
 
         public event Action<ProjectSettings> OnProjectLoad;
 
+        public event Action<ChartSettings> OnDifficultyPresetChange;
+
         public ProjectSettings CurrentProject { get; private set; }
 
         public ChartSettings CurrentChart { get; private set; }
@@ -111,7 +113,7 @@ namespace ArcCreate.Compose.Project
                 Charts = new List<ChartSettings>() { chart },
             };
 
-            AutofillChart(chart);
+            AutofillChart(chart, info.UseInscribedPreset);
             SerializeProject(projectSettings);
             OpenProject(projectSettings.Path);
 
@@ -122,11 +124,11 @@ namespace ArcCreate.Compose.Project
                 }));
         }
 
-        public void CreateNewChart(string chartFilePath)
+        public void CreateNewChart(string chartFilePath, bool useInscribedPreset = false)
         {
             ChartSettings newChart = CurrentChart.Clone();
             newChart.ChartPath = chartFilePath;
-            AutofillChart(newChart);
+            AutofillChart(newChart, useInscribedPreset);
 
             CurrentProject.Charts.Add(newChart);
             CurrentProject.Charts.Sort((a, b) => a.ChartPath.CompareTo(b.ChartPath));
@@ -143,6 +145,32 @@ namespace ArcCreate.Compose.Project
                 {
                     { "Path", chartFilePath },
                 }));
+        }
+
+        public void ApplyDifficultyPreset(ChartSettings chart, bool useInscribedPreset)
+        {
+            int index = useInscribedPreset ? 5 : 3;
+            string beyondName = GetDifficultyNamePrefix(defaultDifficultyNames[3]);
+            string inscribedName = GetDifficultyNamePrefix(defaultDifficultyNames[5]);
+            string currentPrefix = useInscribedPreset ? beyondName : inscribedName;
+            string replacementPrefix = useInscribedPreset ? inscribedName : beyondName;
+            string difficulty = chart.Difficulty ?? string.Empty;
+
+            if (difficulty == currentPrefix || difficulty.StartsWith(currentPrefix + " ", StringComparison.Ordinal))
+            {
+                chart.Difficulty = replacementPrefix + difficulty.Substring(currentPrefix.Length);
+            }
+
+            Color color = defaultDifficultyColors[index];
+            chart.DifficultyColor = color.ConvertToHexCode();
+            if (chart == CurrentChart)
+            {
+                gameplayData.DifficultyName.Value = chart.Difficulty ?? string.Empty;
+                gameplayData.DifficultyColor.Value = color;
+            }
+
+            Values.ProjectModified = true;
+            OnDifficultyPresetChange?.Invoke(chart);
         }
 
         public void OpenChart(ChartSettings chart)
@@ -381,7 +409,7 @@ namespace ArcCreate.Compose.Project
             }
         }
 
-        private void AutofillChart(ChartSettings chart)
+        private void AutofillChart(ChartSettings chart, bool useInscribedPreset = false)
         {
             chart.Title = string.IsNullOrEmpty(chart.Title) ? Values.DefaultTitle : chart.Title;
             chart.Composer = string.IsNullOrEmpty(chart.Composer) ? Values.DefaultComposer : chart.Composer;
@@ -402,8 +430,9 @@ namespace ArcCreate.Compose.Project
                     chart.Difficulty = defaultDifficultyNames[2];
                     break;
                 case "3":
-                    chart.DifficultyColor = defaultDifficultyColors[3].ConvertToHexCode();
-                    chart.Difficulty = defaultDifficultyNames[3];
+                    int index = useInscribedPreset ? 5 : 3;
+                    chart.DifficultyColor = defaultDifficultyColors[index].ConvertToHexCode();
+                    chart.Difficulty = defaultDifficultyNames[index];
                     break;
                 case "4":
                     chart.DifficultyColor = defaultDifficultyColors[4].ConvertToHexCode();
@@ -414,6 +443,12 @@ namespace ArcCreate.Compose.Project
                     chart.Difficulty = defaultDifficultyNames[2];
                     break;
             }
+        }
+
+        private static string GetDifficultyNamePrefix(string difficultyName)
+        {
+            int separator = difficultyName.LastIndexOf(' ');
+            return separator < 0 ? difficultyName : difficultyName.Substring(0, separator);
         }
 
         private void LoadChart(ChartSettings chart)

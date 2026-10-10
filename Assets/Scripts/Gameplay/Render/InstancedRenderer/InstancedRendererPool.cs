@@ -8,22 +8,24 @@ namespace ArcCreate.Gameplay.Render
         private readonly Material material;
         private readonly Mesh mesh;
         private readonly bool useProperties;
+        private readonly bool useTraceColors;
         private readonly List<InstancedRenderer> renderers = new List<InstancedRenderer>();
         private readonly List<Material> materials = new List<Material>();
 
         private int index = 0;
 
-        public InstancedRendererPool(Material material, Mesh mesh, bool useProperties)
+        public InstancedRendererPool(Material material, Mesh mesh, bool useProperties, bool useTraceColors = false)
         {
             this.material = material;
             this.mesh = mesh;
             this.useProperties = useProperties;
+            this.useTraceColors = useTraceColors;
             CreateNewRenderer();
         }
 
-        public void RegisterInstance(Matrix4x4 matrix, Color color, Vector4 property = default)
+        public void RegisterInstance(Matrix4x4 matrix, Color color, Vector4 property = default, Color traceColor = default)
         {
-            bool accepted = renderers[index].RegisterInstance(matrix, color, property);
+            bool accepted = renderers[index].RegisterInstance(matrix, color, property, traceColor);
             if (!accepted)
             {
                 index += 1;
@@ -32,7 +34,7 @@ namespace ArcCreate.Gameplay.Render
                     CreateNewRenderer();
                 }
 
-                RegisterInstance(matrix, color, property);
+                RegisterInstance(matrix, color, property, traceColor);
             }
         }
 
@@ -62,7 +64,7 @@ namespace ArcCreate.Gameplay.Render
         {
             Material newMat = Object.Instantiate(material);
             materials.Add(newMat);
-            renderers.Add(new InstancedRenderer(newMat, mesh, useProperties));
+            renderers.Add(new InstancedRenderer(newMat, mesh, useProperties, useTraceColors));
         }
     }
 }

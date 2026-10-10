@@ -20,6 +20,7 @@ namespace ArcCreate.Compose.Project
         [SerializeField] private ImageFileSelectField backgroundField;
 
         private string currentFolder;
+        private ChartFilePathInputField chartFilePathInput;
 
         private string StartingChartFile
             => startingChartFileField.text + startingChartFileExtension.options[startingChartFileExtension.value].text;
@@ -40,6 +41,7 @@ namespace ArcCreate.Compose.Project
                 {
                     ProjectFile = projectFileField.CurrentPath,
                     StartingChartPath = StartingChartFile,
+                    UseInscribedPreset = chartFilePathInput.UseInscribedPreset,
                     BaseBPM = bpm,
                     AudioPath = FilePath.Local(dir, audioFileField.CurrentPath.FullPath),
                     JacketPath = jacketArtField.CurrentPath != null ? FilePath.Local(dir, jacketArtField.CurrentPath.FullPath) : null,
@@ -127,6 +129,7 @@ namespace ArcCreate.Compose.Project
 
         private void Awake()
         {
+            chartFilePathInput = startingChartFileField.GetComponentInParent<ChartFilePathInputField>();
             confirmButton.onClick.AddListener(OnConfirm);
             closeButton.onClick.AddListener(Close);
             projectFileField.OnValueChanged += OnProjectFileSelect;

@@ -39,7 +39,7 @@
 
 			float _Offset;
 			sampler2D _MainTex;
-			float4 _Color, _Modify;
+			float4 _MainTex_TexelSize, _Color, _Modify;
 
 			v2f vert (appdata v)
 			{
@@ -59,7 +59,7 @@
 				p.y += _Modify.y;
 				p.y *= _Modify.w;
 				p.y %= 1;
-				p.y += _Offset; 
+				p.y += _Offset * 512 * _MainTex_TexelSize.y;
 				float4 c= tex2D(_MainTex,p) * i.color;
 				c.a *= 0.75;
 				return c;

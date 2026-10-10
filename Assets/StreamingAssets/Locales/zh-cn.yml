@@ -715,6 +715,13 @@ Compose:
         MiraiConflict: Mirai纷争侧
         Dynamix: Dynamix
         Black: Black
+        DarkLephon: Dark Lephon
+        TouhouBullet: Touhou Bullet
+        TouhouLight: Touhou Light
+        UndertaleConflict: Undertale Conflict
+        UndertaleLight: Undertale Light
+        MaculaConflict: Macula Conflict
+        MaculaLight: Macula Light
         Nijuusei: Nijuusei
         Rei: Rei
         DarkVs: DarkVs
@@ -729,6 +736,7 @@ Compose:
         Future: Future
         Eternal: Eternal
         Beyond: Beyond
+        Inscribed: Inscribed
     Timeline:
       Label:
         Offset: 偏移

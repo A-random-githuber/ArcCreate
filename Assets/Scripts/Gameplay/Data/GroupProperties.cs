@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using ArcCreate.ChartFormat;
 using ArcCreate.Gameplay.Judgement;
 using ArcCreate.Gameplay.Skin;
@@ -40,6 +41,22 @@ namespace ArcCreate.Gameplay.Data
             DropRateSC = raw.DropRate;
             Editable = raw.Editable;
             Autoplay = raw.Autoplay;
+            if (raw.TraceColor != null
+                && raw.TraceColor.Length > 0
+                && raw.TraceColor.Length <= 6
+                && uint.TryParse(
+                    raw.TraceColor.PadRight(6, '0'),
+                    NumberStyles.AllowHexSpecifier,
+                    CultureInfo.InvariantCulture,
+                    out uint traceColor))
+            {
+                TraceColor = new Color32(
+                    (byte)(traceColor >> 16),
+                    (byte)(traceColor >> 8),
+                    (byte)traceColor,
+                    byte.MaxValue);
+            }
+
             foreach (var pair in raw.JudgementMaps)
             {
                 JudgementMaps.Add((JudgementResult)(int)pair.Key, (JudgementResult)(int)pair.Value);
@@ -55,6 +72,8 @@ namespace ArcCreate.Gameplay.Data
         public NoteSkinOverride SkinOverride { get; set; } = NoteSkinOverride.Default;
 
         public Color Color { get; set; } = Color.white;
+
+        public Color TraceColor { get; set; } = Color.clear;
 
         public Vector3 ScaleIndividual { get; set; } = Vector3.one;
 
@@ -185,6 +204,7 @@ namespace ArcCreate.Gameplay.Data
                 ArcResolution = ArcResolution,
                 Autoplay = Autoplay,
                 IgnoreMirror = IgnoreMirror,
+                TraceColor = TraceColor.a > 0 ? ToTraceCol(TraceColor) : null,
             };
 
             foreach (var pair in JudgementMaps)
@@ -193,6 +213,14 @@ namespace ArcCreate.Gameplay.Data
             }
 
             return rtg;
+        }
+
+        private static string ToTraceCol(Color color)
+        {
+            Color32 color32 = color;
+            uint value = ((uint)color32.r << 16) | ((uint)color32.g << 8) | color32.b;
+            string encode = value.ToString("x6", CultureInfo.InvariantCulture).TrimEnd('0');
+            return encode.Length > 0 ? encode : "0";
         }
 
         public JudgementResult MapJudgementResult(JudgementResult from)

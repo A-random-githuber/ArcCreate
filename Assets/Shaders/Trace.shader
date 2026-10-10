@@ -3,7 +3,9 @@
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
+		_TraceColorTex ("Trace color texture", 2D) = "white" {}
 		_TraceColor ("Trace color", Color) = (1,1,1,1)
+		_TraceColorOverride ("Trace color override", Color) = (0,0,0,0)
 		_Color ("Color", Color) = (1, 1, 1, 1)
 		_Properties ("Properties", Vector) = (0, 0, 0, 0)
 	}
@@ -16,7 +18,7 @@
         Lighting Off
 		ZWrite Off
 		ZTest Always
-  
+
 		// Body pass
 		Pass
 		{
@@ -37,33 +39,35 @@
 
 			struct v2f
 			{
-				float4 vertex : SV_POSITION; 
+				float4 vertex : SV_POSITION;
 				float2 uv : TEXCOORD0;
 				float3 worldpos : TEXCOORD1;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
-			
+
 			UNITY_INSTANCING_BUFFER_START(Props)
                 UNITY_DEFINE_INSTANCED_PROP(half4, _Color)
                 UNITY_DEFINE_INSTANCED_PROP(float4, _Properties)
+                UNITY_DEFINE_INSTANCED_PROP(half4, _TraceColorOverride)
             UNITY_INSTANCING_BUFFER_END(Props)
-			 
+
             float4 _MainTex_ST;
 			half4 _TraceColor;
 			sampler2D _MainTex;
+			sampler2D _TraceColorTex;
 
 			v2f vert (appdata v)
 			{
 				v2f o;
 				UNITY_SETUP_INSTANCE_ID(v);
 				UNITY_TRANSFER_INSTANCE_ID(v, o);
-				
+
 				o.worldpos = mul(unity_ObjectToWorld, v.vertex);
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				return o;
 			}
-			
+
 			half4 Highlight(half4 c)
 			{
 				fixed3 hsv = rgb2hsv(c.rgb);
@@ -77,10 +81,18 @@
 				UNITY_SETUP_INSTANCE_ID(i);
 
 			    if(i.worldpos.z > 50 || i.worldpos.z < -90) return 0;
-				half4 c = tex2D(_MainTex,i.uv); 
+				half4 traceColorOverride = UNITY_ACCESS_INSTANCED_PROP(Props, _TraceColorOverride);
+				bool hasTraceColorOverride = traceColorOverride.a >= 0.5;
+				half4 c = hasTraceColorOverride ? tex2D(_TraceColorTex,i.uv) : tex2D(_MainTex,i.uv);
 				half4 traceColor = _TraceColor;
-				
-				if(UNITY_ACCESS_INSTANCED_PROP(Props, _Properties).x >= 0.5) 
+				if(hasTraceColorOverride)
+				{
+					half luminance = dot(c.rgb, half3(0.2126, 0.7152, 0.0722));
+					c.rgb = half3(luminance, luminance, luminance);
+					traceColor = half4(traceColorOverride.rgb, traceColor.a);
+				}
+
+				if(UNITY_ACCESS_INSTANCED_PROP(Props, _Properties).x >= 0.5)
 				{
 					traceColor = Highlight(traceColor);
 				}

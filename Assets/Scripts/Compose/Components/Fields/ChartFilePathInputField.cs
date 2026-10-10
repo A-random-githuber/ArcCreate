@@ -9,18 +9,24 @@ namespace ArcCreate.Compose.Components
 {
     public class ChartFilePathInputField : MonoBehaviour
     {
-        private static readonly List<(string, TMP_Dropdown.OptionData)> Options = new List<(string, TMP_Dropdown.OptionData)>
+        private static readonly List<(string Path, string LocalizationKey, bool IsInscribed)> Options
+            = new List<(string Path, string LocalizationKey, bool IsInscribed)>
         {
-            ("0", new TMP_Dropdown.OptionData(I18n.S("Compose.UI.Project.Options.Past"))),
-            ("1", new TMP_Dropdown.OptionData(I18n.S("Compose.UI.Project.Options.Present"))),
-            ("2", new TMP_Dropdown.OptionData(I18n.S("Compose.UI.Project.Options.Future"))),
-            ("4", new TMP_Dropdown.OptionData(I18n.S("Compose.UI.Project.Options.Eternal"))),
-            ("3", new TMP_Dropdown.OptionData(I18n.S("Compose.UI.Project.Options.Beyond"))),
+            ("0", "Compose.UI.Project.Options.Past", false),
+            ("1", "Compose.UI.Project.Options.Present", false),
+            ("2", "Compose.UI.Project.Options.Future", false),
+            ("4", "Compose.UI.Project.Options.Eternal", false),
+            ("3", "Compose.UI.Project.Options.Beyond", false),
+            ("3", "Compose.UI.Project.Options.Inscribed", true),
         };
 
         [SerializeField] private TMP_InputField inputField;
         [SerializeField] private Toggle toggleCustom;
         [SerializeField] private TMP_Dropdown presets;
+
+        public bool IsDifficultyAliasPreset => !toggleCustom.isOn && Options[presets.value].Path == "3";
+
+        public bool UseInscribedPreset => !toggleCustom.isOn && Options[presets.value].IsInscribed;
 
         private void Awake()
         {
@@ -35,7 +41,9 @@ namespace ArcCreate.Compose.Components
 
         private void ReloadOptions()
         {
-            presets.options = Options.Select(e => e.Item2).ToList();
+            presets.options = Options
+                .Select(e => new TMP_Dropdown.OptionData(I18n.S(e.LocalizationKey)))
+                .ToList();
         }
 
         private void OnDestroy()
@@ -57,7 +65,7 @@ namespace ArcCreate.Compose.Components
 
         private void OnPresetSelect(int val)
         {
-            inputField.text = Options[val].Item1;
+            inputField.text = Options[val].Path;
         }
     }
 }
