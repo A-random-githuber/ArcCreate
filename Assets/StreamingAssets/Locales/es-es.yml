@@ -385,11 +385,13 @@ Compose:
           Blue: Arco azul
           Red: Arco rojo
           Green: Arco verde
+          Gray: Arco gris
         ArcAlt: 
           Name: Arco (alt)
           Blue: Arco azul
           Red: Arco rojo
           Green: Arco verde
+          Gray: Arco gris
         Sky: Flotante
         Tap: Tap
         Hold: Hold
@@ -682,6 +684,7 @@ Compose:
         Blue: Azul
         Red: Rojo
         Green: Verde
+        Gray: Gris
         Custom: <size=12>Personalizado</size>
         AddArcColor: Añadir color a arco
         NoProjectLoaded: |-

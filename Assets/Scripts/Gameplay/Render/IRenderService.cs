@@ -35,7 +35,7 @@ namespace ArcCreate.Gameplay.Render
 
         void DrawTraceHead(Matrix4x4 matrix, Color color, Color traceColor, bool selected);
 
-        void DrawTraceSegment(Matrix4x4 matrix, Color color, Color traceColor, bool selected, float depth);
+        void DrawTraceSegment(int colorId, Matrix4x4 matrix, Color color, Color traceColor, bool selected, float y, float depth);
 
         void DrawTraceShadow(Matrix4x4 matrix, Color color);
 

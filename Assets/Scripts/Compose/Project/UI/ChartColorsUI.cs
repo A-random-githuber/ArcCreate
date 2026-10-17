@@ -15,6 +15,7 @@ namespace ArcCreate.Compose.Project
         [SerializeField] private ArcColorInputField arcBlue;
         [SerializeField] private ArcColorInputField arcRed;
         [SerializeField] private ArcColorInputField arcGreen;
+        [SerializeField] private ArcColorInputField arcGray;
         [SerializeField] private List<ArcColorInputField> arcCustom;
         [SerializeField] private Button newArcColorButton;
         [SerializeField] private Button resetTraceButton;
@@ -42,15 +43,18 @@ namespace ArcCreate.Compose.Project
             arcBlue.DefaultColorHigh = defaultArc[0];
             arcRed.DefaultColorHigh = defaultArc[1];
             arcGreen.DefaultColorHigh = defaultArc[2];
+            arcGray.DefaultColorHigh = defaultArc[3];
             arcBlue.DefaultColorLow = defaultArcLow[0];
             arcRed.DefaultColorLow = defaultArcLow[1];
             arcGreen.DefaultColorLow = defaultArcLow[2];
+            arcGray.DefaultColorLow = defaultArcLow[3];
 
             if (chart.Colors == null)
             {
                 arcBlue.SetValueWithoutNotify(defaultArc[0], defaultArcLow[0]);
                 arcRed.SetValueWithoutNotify(defaultArc[1], defaultArcLow[1]);
                 arcGreen.SetValueWithoutNotify(defaultArc[2], defaultArcLow[2]);
+                arcGray.SetValueWithoutNotify(defaultArc[3], defaultArcLow[3]);
                 traceBody.SetValueWithoutNotify(defaultTrace);
                 shadow.SetValueWithoutNotify(defaultShadow);
                 return;
@@ -62,7 +66,7 @@ namespace ArcCreate.Compose.Project
             shadow.SetValueWithoutNotify(sdw);
 
             int count = Mathf.Min(chart.Colors.Arc.Count, chart.Colors.ArcLow.Count);
-            for (int i = 3; i < count; i++)
+            for (int i = 4; i < count; i++)
             {
                 chart.Colors.Arc[i].ConvertHexToColor(out Color high);
                 chart.Colors.ArcLow[i].ConvertHexToColor(out Color low);
@@ -102,6 +106,17 @@ namespace ArcCreate.Compose.Project
                 arcGreen.SetValueWithoutNotify(high, low);
             }
 
+            if (count <= 3)
+            {
+                arcGray.SetValueWithoutNotify(defaultArc[3], defaultArcLow[3]);
+            }
+            else
+            {
+                chart.Colors.Arc[3].ConvertHexToColor(out Color high);
+                chart.Colors.ArcLow[3].ConvertHexToColor(out Color low);
+                arcGray.SetValueWithoutNotify(high, low);
+            }
+
             ApplyColorSettings();
         }
 
@@ -113,6 +128,7 @@ namespace ArcCreate.Compose.Project
             shadow.OnValueChange += Schedule;
             arcRed.OnValueChange += Schedule;
             arcGreen.OnValueChange += Schedule;
+            arcGray.OnValueChange += Schedule;
             arcBlue.OnValueChange += Schedule;
 
             newArcColorButton.onClick.AddListener(OnNewArcColorButton);
@@ -127,6 +143,7 @@ namespace ArcCreate.Compose.Project
             shadow.OnValueChange -= Schedule;
             arcRed.OnValueChange -= Schedule;
             arcGreen.OnValueChange -= Schedule;
+            arcGray.OnValueChange -= Schedule;
             arcBlue.OnValueChange -= Schedule;
 
             foreach (var arc in arcCustom)
@@ -178,7 +195,7 @@ namespace ArcCreate.Compose.Project
             for (int i = 0; i < arcCustom.Count; i++)
             {
                 ArcColorInputField colorField = arcCustom[i];
-                colorField.Label = I18n.S("Compose.UI.Project.Label.Custom", i + 3);
+                colorField.Label = I18n.S("Compose.UI.Project.Label.Custom", i + 4);
             }
         }
 
@@ -189,7 +206,7 @@ namespace ArcCreate.Compose.Project
             comp.OnValueChange += Schedule;
             comp.DefaultColorHigh = Services.Gameplay.Skin.UnknownArcColor;
             comp.DefaultColorLow = Services.Gameplay.Skin.UnknownArcLowColor;
-            comp.Label = I18n.S("Compose.UI.Project.Label.Custom", arcCustom.Count + 3);
+            comp.Label = I18n.S("Compose.UI.Project.Label.Custom", arcCustom.Count + 4);
             comp.SetValueWithoutNotify(high, low);
             comp.OnReset += OnCustomFieldReset;
             arcCustom.Add(comp);
@@ -213,6 +230,7 @@ namespace ArcCreate.Compose.Project
                 arcBlue.High,
                 arcRed.High,
                 arcGreen.High,
+                arcGray.High,
             };
 
             List<Color> lowColors = new List<Color>()
@@ -220,6 +238,7 @@ namespace ArcCreate.Compose.Project
                 arcBlue.Low,
                 arcRed.Low,
                 arcGreen.Low,
+                arcGray.Low,
             };
 
             List<string> highColorStrings = new List<string>()
@@ -227,6 +246,7 @@ namespace ArcCreate.Compose.Project
                 arcBlue.High.ConvertToHexCode(),
                 arcRed.High.ConvertToHexCode(),
                 arcGreen.High.ConvertToHexCode(),
+                arcGray.High.ConvertToHexCode(),
             };
 
             List<string> lowColorStrings = new List<string>()
@@ -234,6 +254,7 @@ namespace ArcCreate.Compose.Project
                 arcBlue.Low.ConvertToHexCode(),
                 arcRed.Low.ConvertToHexCode(),
                 arcGreen.Low.ConvertToHexCode(),
+                arcGray.Low.ConvertToHexCode(),
             };
 
             foreach (ArcColorInputField arc in arcCustom)

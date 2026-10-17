@@ -389,11 +389,13 @@ Compose:
           Blue: 藍
           Red: 紅
           Green: 綠
+          Gray: 灰
         ArcAlt:
           Name: 黑線
           Blue: 藍
           Red: 紅
           Green: 綠
+          Gray: 灰
         Sky: 天鍵
         Tap: 地鍵
         Hold: 長按
@@ -685,6 +687,7 @@ Compose:
         Blue: 藍
         Red: 紅
         Green: 綠
+        Gray: 灰
         AddArcColor: 新增音弧顏色
         NoProjectLoaded: |-
           沒有專案被讀取，

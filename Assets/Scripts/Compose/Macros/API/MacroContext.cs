@@ -55,7 +55,8 @@ namespace ArcCreate.Compose.Macros
         // Constant
         public static int CurrentArcColor => Values.CreateArcColorMode.Value;
 
-        public static int MaxArcColor => (Services.Project.CurrentChart.Colors?.Arc.Count ?? 3) - 1;
+        public static int MaxArcColor => (Services.Project.CurrentChart.Colors?.Arc.Count
+            ?? Services.Gameplay.Skin.DefaultArcColors.Count) - 1;
 
         public static string[] AllArcTypes => new string[] { "b", "s", "si", "so", "sisi", "soso", "siso", "sosi" };
 

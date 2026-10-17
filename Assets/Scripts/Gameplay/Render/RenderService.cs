@@ -29,6 +29,9 @@ namespace ArcCreate.Gameplay.Render
         [SerializeField] private Material heightIndicatorMaterial;
         [SerializeField] private Material connectionLineMaterial;
 
+        private static readonly int ColorShaderId = Shader.PropertyToID("_Color");
+        private static readonly int PropertiesShaderId = Shader.PropertyToID("_Properties");
+        private static readonly int TraceColorShaderId = Shader.PropertyToID("_TraceColorOverride");
         private readonly List<Material> generatedMaterials = new List<Material>();
 
         // Floor
@@ -37,14 +40,15 @@ namespace ArcCreate.Gameplay.Render
         private InstancedRendererPool connectionLineDrawer;
 
         // Arc & trace
-        private readonly List<ArcDrawCall> queuedArcDrawCalls = new List<ArcDrawCall>();
-        private readonly List<ArcDrawCall> queuedTraceDrawCalls = new List<ArcDrawCall>();
-        private readonly IComparer<ArcDrawCall> arcDrawCallComparer = new ArcDrawCallComparer();
-        private InstancedRendererPool arcSegmentDrawer;
+        private readonly List<ArcBodySegmentRenderer> arcSegmentRenderers = new List<ArcBodySegmentRenderer>();
+        private readonly List<ArcBodySegmentRenderer> traceSegmentRenderers = new List<ArcBodySegmentRenderer>();
+        private int activeArcSegmentRenderers;
+        private int activeTraceSegmentRenderers;
+        private Material arcBodyMaterial;
+        private Material traceBodyMaterial;
         private InstancedRendererPool arcHeadDrawer;
         private readonly Dictionary<Texture, InstancedRendererPool> arcCapDrawers = new Dictionary<Texture, InstancedRendererPool>();
         private InstancedRendererPool arcShadowDrawer;
-        private InstancedRendererPool traceSegmentDrawer;
         private InstancedRendererPool traceHeadDrawer;
         private InstancedRendererPool traceShadowDrawer;
         private InstancedRendererPool heightIndicatorDrawer;
@@ -105,25 +109,15 @@ namespace ArcCreate.Gameplay.Render
             (Color high, Color low) = Services.Skin.GetArcColor(colorId);
             color *= Color.Lerp(Color.Lerp(low, high, (y - 1) / 4.5f), Color.red, redValue);
             Vector4 properties = new Vector4(selected ? 1 : 0, highlight ? 1 : 0, 0, 0);
-            queuedArcDrawCalls.Add(new ArcDrawCall
-            {
-                Matrix = matrix,
-                Color = color,
-                Properties = properties,
-                Depth = depth,
-            });
+            ArcBodySegmentRenderer renderer = GetArcBodySegmentRenderer(false);
+            renderer.Update(matrix, color, properties, Color.clear, colorId, y);
         }
 
-        public void DrawTraceSegment(Matrix4x4 matrix, Color color, Color traceColor, bool selected, float depth)
+        public void DrawTraceSegment(int colorId, Matrix4x4 matrix, Color color, Color traceColor, bool selected, float y, float depth)
         {
-            queuedTraceDrawCalls.Add(new ArcDrawCall
-            {
-                Matrix = matrix,
-                Color = color,
-                Properties = new Vector4(selected ? 1 : 0, 0, 0, 0),
-                TraceColor = traceColor,
-                Depth = depth,
-            });
+            Vector4 properties = new Vector4(selected ? 1 : 0, 0, 0, 0);
+            ArcBodySegmentRenderer renderer = GetArcBodySegmentRenderer(true);
+            renderer.Update(matrix, color, properties, traceColor, colorId, y);
         }
 
         public void DrawArcShadow(Matrix4x4 matrix, Color color, Vector4 cornerOffset)
@@ -190,6 +184,7 @@ namespace ArcCreate.Gameplay.Render
 
         public void UpdateRenderers()
         {
+            FinishArcBodyFrame();
             if (!notesCamera.enabled || !notesCamera.gameObject.activeInHierarchy)
             {
                 return;
@@ -209,19 +204,6 @@ namespace ArcCreate.Gameplay.Render
             traceShadowDrawer.Draw(notesCamera, layer);
             arcShadowDrawer.Draw(notesCamera, layer);
 
-            queuedTraceDrawCalls.Sort(arcDrawCallComparer);
-            foreach (var call in queuedTraceDrawCalls)
-            {
-                traceSegmentDrawer.RegisterInstance(
-                    call.Matrix,
-                    call.Color,
-                    call.Properties,
-                    call.TraceColor);
-            }
-
-            traceSegmentDrawer.Draw(notesCamera, layer);
-            queuedTraceDrawCalls.Clear();
-
             traceHeadDrawer.Draw(notesCamera, layer);
             arctapShadowDrawer.Draw(notesCamera, layer);
 
@@ -230,18 +212,6 @@ namespace ArcCreate.Gameplay.Render
             {
                 pair.Value.Draw(notesCamera, layer);
             }
-
-            queuedArcDrawCalls.Sort(arcDrawCallComparer);
-            foreach (var call in queuedArcDrawCalls)
-            {
-                arcSegmentDrawer.RegisterInstance(
-                    call.Matrix,
-                    call.Color,
-                    call.Properties);
-            }
-
-            arcSegmentDrawer.Draw(notesCamera, layer);
-            queuedArcDrawCalls.Clear();
 
             #region ArcTap
 
@@ -258,26 +228,23 @@ namespace ArcCreate.Gameplay.Render
                         call.IsSfx ? arctapSfxMesh : arctapMesh,
                         true));
                 }
-                
+
                 arctapDrawers[call.Texture].RegisterInstance(call.Matrix, call.Color, call.Properties);
                 arctapDrawers[call.Texture].Draw(notesCamera, layer);
             }
-            
+
             queuedArcTapDrawCalls.Clear();
 
             #endregion
-            
+
             arcHeadDrawer.Draw(notesCamera, layer);
         }
 
         public void SetTraceMaterial(Material material)
         {
-            traceSegmentDrawer?.Dispose();
-            traceSegmentDrawer = new InstancedRendererPool(
-                material,
-                ArcMeshGenerator.GetSegmentMesh(true),
-                true,
-                true);
+            DisposeArcBodySegmentRenderers(traceSegmentRenderers);
+            activeTraceSegmentRenderers = 0;
+            traceBodyMaterial = material;
 
             traceHeadDrawer?.Dispose();
             traceHeadDrawer = new InstancedRendererPool(
@@ -308,14 +275,11 @@ namespace ArcCreate.Gameplay.Render
 
         public void SetArcMaterial(Material material)
         {
-            arcSegmentDrawer?.Dispose();
+            DisposeArcBodySegmentRenderers(arcSegmentRenderers);
+            activeArcSegmentRenderers = 0;
+            arcBodyMaterial = material;
+
             arcHeadDrawer?.Dispose();
-
-            arcSegmentDrawer = new InstancedRendererPool(
-                material,
-                ArcMeshGenerator.GetSegmentMesh(false),
-                true);
-
             arcHeadDrawer = new InstancedRendererPool(
                 material,
                 ArcMeshGenerator.GetHeadMesh(false),
@@ -348,12 +312,52 @@ namespace ArcCreate.Gameplay.Render
             UpdateLoadedState();
         }
 
+        private ArcBodySegmentRenderer GetArcBodySegmentRenderer(bool isTrace)
+        {
+            List<ArcBodySegmentRenderer> renderers = isTrace ? traceSegmentRenderers : arcSegmentRenderers;
+            int index = isTrace ? activeTraceSegmentRenderers++ : activeArcSegmentRenderers++;
+            if (index >= renderers.Count)
+            {
+                Material material = isTrace ? traceBodyMaterial : arcBodyMaterial;
+                float offset = isTrace ? Values.TraceMeshOffset : Values.ArcMeshOffset;
+                renderers.Add(new ArcBodySegmentRenderer(transform, layer, material, offset, isTrace));
+            }
+
+            return renderers[index];
+        }
+
+        private void FinishArcBodyFrame()
+        {
+            DisableUnusedArcBodySegmentRenderers(arcSegmentRenderers, activeArcSegmentRenderers);
+            DisableUnusedArcBodySegmentRenderers(traceSegmentRenderers, activeTraceSegmentRenderers);
+            activeArcSegmentRenderers = 0;
+            activeTraceSegmentRenderers = 0;
+        }
+
+        private static void DisableUnusedArcBodySegmentRenderers(List<ArcBodySegmentRenderer> renderers, int activeCount)
+        {
+            for (int i = activeCount; i < renderers.Count; i++)
+            {
+                renderers[i].Disable();
+            }
+        }
+
+        private static void DisposeArcBodySegmentRenderers(List<ArcBodySegmentRenderer> renderers)
+        {
+            for (int i = 0; i < renderers.Count; i++)
+            {
+                renderers[i].Dispose();
+            }
+
+            renderers.Clear();
+        }
+
         private void UpdateLoadedState()
         {
             IsLoaded = connectionLineDrawer != null
-                    && arcSegmentDrawer != null
+                    && arcBodyMaterial != null
                     && arcHeadDrawer != null
-                    && traceSegmentDrawer != null
+                    && traceBodyMaterial != null
                     && traceHeadDrawer != null
                     && arcShadowDrawer != null
                     && traceShadowDrawer != null
@@ -396,7 +400,7 @@ namespace ArcCreate.Gameplay.Render
             traceShadowDrawer.Dispose();
             arcShadowDrawer.Dispose();
 
-            traceSegmentDrawer.Dispose();
+            DisposeArcBodySegmentRenderers(traceSegmentRenderers);
             traceHeadDrawer.Dispose();
             arctapShadowDrawer.Dispose();
 
@@ -406,7 +410,7 @@ namespace ArcCreate.Gameplay.Render
                 pair.Value.Dispose();
             }
 
-            arcSegmentDrawer.Dispose();
+            DisposeArcBodySegmentRenderers(arcSegmentRenderers);
 
             foreach (var pair in arctapDrawers)
             {
@@ -414,6 +418,107 @@ namespace ArcCreate.Gameplay.Render
             }
 
             arcHeadDrawer.Dispose();
+        }
+
+        private sealed class ArcBodySegmentRenderer
+        {
+            private static readonly int[] LeftTriangles = { 0, 3, 2, 0, 2, 1 };
+            private static readonly int[] RightTriangles = { 0, 1, 4, 0, 4, 5 };
+            private static readonly Vector2[] Uv =
+            {
+                new Vector2(0, 0),
+                new Vector2(0, 1),
+                new Vector2(1, 1),
+                new Vector2(1, 0),
+                new Vector2(1, 1),
+                new Vector2(1, 0),
+            };
+
+            private readonly GameObject gameObject;
+            private readonly Mesh mesh;
+            private readonly MeshRenderer meshRenderer;
+            private readonly Material leftMaterial;
+            private readonly Material rightMaterial;
+            private readonly MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
+            private readonly Vector3[] sourceVertices;
+            private readonly Vector3[] vertices = new Vector3[6];
+            private readonly Transform parent;
+
+            public ArcBodySegmentRenderer(Transform parent, int layer, Material material, float offset, bool isTrace)
+            {
+                this.parent = parent;
+                gameObject = new GameObject(isTrace ? "Trace body segment" : "Arc body segment");
+                gameObject.hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSave;
+                gameObject.layer = layer;
+                gameObject.transform.SetParent(parent, false);
+
+                float offsetHalf = offset / 2;
+                sourceVertices = new Vector3[]
+                {
+                    new Vector3(0, offsetHalf, 0),
+                    new Vector3(0, offsetHalf, 1),
+                    new Vector3(offset, -offsetHalf, 1),
+                    new Vector3(offset, -offsetHalf, 0),
+                    new Vector3(-offset, -offsetHalf, 1),
+                    new Vector3(-offset, -offsetHalf, 0),
+                };
+
+                mesh = new Mesh
+                {
+                    name = isTrace ? "Trace body segment" : "Arc body segment",
+                };
+                mesh.MarkDynamic();
+                mesh.vertices = vertices;
+                mesh.uv = Uv;
+                mesh.subMeshCount = 2;
+                mesh.SetTriangles(LeftTriangles, 0, false);
+                mesh.SetTriangles(RightTriangles, 1, false);
+                mesh.RecalculateBounds();
+
+                MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
+                meshFilter.sharedMesh = mesh;
+                meshRenderer = gameObject.AddComponent<MeshRenderer>();
+                leftMaterial = new Material(material);
+                rightMaterial = new Material(material);
+                meshRenderer.sharedMaterials = new Material[] { leftMaterial, rightMaterial };
+            }
+
+            public void Update(Matrix4x4 matrix, Color color, Vector4 properties, Color traceColor, int colorId, float endY)
+            {
+                Matrix4x4 localMatrix = parent.worldToLocalMatrix * matrix;
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    vertices[i] = localMatrix.MultiplyPoint3x4(sourceVertices[i]);
+                }
+
+                mesh.vertices = vertices;
+                mesh.RecalculateBounds();
+
+                int renderQueue = 1002999 + (3 * colorId) + (4 * (int)(endY * 100));
+                leftMaterial.renderQueue = renderQueue;
+                rightMaterial.renderQueue = renderQueue + 500;
+
+                propertyBlock.Clear();
+                propertyBlock.SetColor(ColorShaderId, color);
+                propertyBlock.SetVector(PropertiesShaderId, properties);
+                propertyBlock.SetColor(TraceColorShaderId, traceColor);
+                meshRenderer.SetPropertyBlock(propertyBlock, 0);
+                meshRenderer.SetPropertyBlock(propertyBlock, 1);
+                meshRenderer.enabled = true;
+            }
+
+            public void Disable()
+            {
+                meshRenderer.enabled = false;
+            }
+
+            public void Dispose()
+            {
+                Object.Destroy(leftMaterial);
+                Object.Destroy(rightMaterial);
+                Object.Destroy(mesh);
+                Object.Destroy(gameObject);
+            }
         }
     }
 }

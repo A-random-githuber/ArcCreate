@@ -396,11 +396,13 @@ Compose:
           Blue: 蓝（0）
           Red: 红（1）
           Green: 绿（2）
+          Gray: 灰（3）
         ArcAlt: 
           Name: 音轨
           Blue: 蓝（0）
           Red: 红（1）
           Green: 绿（2）
+          Gray: 灰（3）
         Sky: 天键
         Tap: 地键
         Hold: 长条
@@ -694,6 +696,7 @@ Compose:
         Blue: 蓝（0）
         Red: 红（1）
         Green: 绿（2）
+        Gray: 灰（3）
         Custom: 自定义
         AddArcColor: 添加Arc颜色
         NoProjectLoaded: |-

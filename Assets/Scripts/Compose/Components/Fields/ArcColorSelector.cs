@@ -82,6 +82,9 @@ namespace ArcCreate.Compose.Components
                 case 2:
                     text.text = I18n.S("Compose.UI.Project.Label.Green");
                     break;
+                case 3:
+                    text.text = I18n.S("Compose.UI.Project.Label.Gray");
+                    break;
                 default:
                     text.text = color.ToString();
                     break;
@@ -92,8 +95,12 @@ namespace ArcCreate.Compose.Components
             var chart = Services.Project.CurrentChart;
             if (chart.Colors == null)
             {
-                Color high = Services.Gameplay.Skin.DefaultArcColors[Mathf.Clamp(color, 0, 2)];
-                Color low = Services.Gameplay.Skin.DefaultArcLowColors[Mathf.Clamp(color, 0, 2)];
+                int maxColor = Mathf.Min(
+                    Services.Gameplay.Skin.DefaultArcColors.Count,
+                    Services.Gameplay.Skin.DefaultArcLowColors.Count) - 1;
+                int colorIndex = Mathf.Clamp(color, 0, maxColor);
+                Color high = Services.Gameplay.Skin.DefaultArcColors[colorIndex];
+                Color low = Services.Gameplay.Skin.DefaultArcLowColors[colorIndex];
                 gradient.m_color1 = high;
                 gradient.m_color2 = low;
                 gradient.enabled = false;

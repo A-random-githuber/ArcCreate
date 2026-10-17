@@ -504,6 +504,7 @@ Compose:
         Blue: Blue
         Red: Red
         Green: Green
+        Gray: Xám
         Custom: Custom
         AddArcColor: Add arc color
         NoProjectLoaded: |-

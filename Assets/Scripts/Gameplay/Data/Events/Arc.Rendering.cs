@@ -263,7 +263,14 @@ namespace ArcCreate.Gameplay.Data
 
                 if (IsTrace)
                 {
-                    Services.Render.DrawTraceSegment(matrix * bodyMatrix, color, groupProperties.TraceColor, IsSelected, depth);
+                    Services.Render.DrawTraceSegment(
+                        Color,
+                        matrix * bodyMatrix,
+                        color,
+                        groupProperties.TraceColor,
+                        IsSelected,
+                        basePos.y + segment.EndPosition.y,
+                        depth);
                     if (!groupProperties.NoShadow)
                     {
                         Services.Render.DrawTraceShadow(matrix * shadowMatrix, color);

@@ -389,11 +389,13 @@ Compose:
           Blue: โน้ตลากสีฟ้า
           Red: โน้ตลากสีแดง
           Green: โน้ตลากสีเขียว
+          Gray: โน้ตลากสีเทา
         ArcAlt: 
           Name: โน้ตลาก (ราง)
           Blue: โน้ตลากสีฟ้า
           Red: โน้ตลากสีแดง
           Green: โน้ตลากสีเขียว
+          Gray: โน้ตลากสีเทา
         Sky: โน้ตอากาศ
         Tap: โน้ตแตะ
         Hold: โน้ตค้าง
@@ -684,6 +686,7 @@ Compose:
         Blue: ฟ้า (0)
         Red: แดง (1)
         Green: เขียว (2)
+        Gray: เทา (3)
         Custom: Custom ({0})
         AddArcColor: เพิ่มสีโน้ตลาก
         NoProjectLoaded: |-

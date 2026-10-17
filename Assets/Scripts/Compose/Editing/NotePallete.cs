@@ -54,11 +54,13 @@ namespace ArcCreate.Compose.Editing
         [SubAction("Blue", false, "1")]
         [SubAction("Red", false, "2")]
         [SubAction("Green", false, "3")]
+        [SubAction("Gray", false, "4")]
         [KeybindHint(Priority = KeybindPriorities.NoteCreation + 2)]
         [KeybindHint("ConfirmColor", Exclude = true)]
         [KeybindHint("Blue", Priority = KeybindPriorities.NoteCreation + 12)]
         [KeybindHint("Red", Priority = KeybindPriorities.NoteCreation + 11)]
         [KeybindHint("Green", Priority = KeybindPriorities.NoteCreation + 10)]
+        [KeybindHint("Gray", Priority = KeybindPriorities.NoteCreation + 9)]
         public UniTask SwitchToArc(EditorAction action)
         {
             return ArcAction(action, creatingArc);
@@ -70,11 +72,13 @@ namespace ArcCreate.Compose.Editing
         [SubAction("Blue", false, "1")]
         [SubAction("Red", false, "2")]
         [SubAction("Green", false, "3")]
+        [SubAction("Gray", false, "4")]
         [KeybindHint(Priority = KeybindPriorities.NoteCreation + 1)]
         [KeybindHint("ConfirmColor", Exclude = true)]
         [KeybindHint("Blue", Priority = KeybindPriorities.NoteCreation + 12)]
         [KeybindHint("Red", Priority = KeybindPriorities.NoteCreation + 11)]
         [KeybindHint("Green", Priority = KeybindPriorities.NoteCreation + 10)]
+        [KeybindHint("Gray", Priority = KeybindPriorities.NoteCreation + 9)]
         public UniTask SwitchToArcAlt(EditorAction action)
         {
             return ArcAction(action, !creatingArc);
@@ -85,6 +89,7 @@ namespace ArcCreate.Compose.Editing
             SubAction blue = action.GetSubAction("Blue");
             SubAction red = action.GetSubAction("Red");
             SubAction green = action.GetSubAction("Green");
+            SubAction gray = action.GetSubAction("Gray");
             SubAction confirmColor = action.GetSubAction("ConfirmColor");
 
             if (creatingArc)
@@ -111,6 +116,11 @@ namespace ArcCreate.Compose.Editing
                 if (green.WasExecuted)
                 {
                     Values.CreateArcColorMode.Value = 2;
+                }
+
+                if (gray.WasExecuted)
+                {
+                    Values.CreateArcColorMode.Value = 3;
                 }
 
                 await UniTask.NextFrame();

@@ -385,11 +385,13 @@ Compose:
           Blue: Arc azul
           Red: Arc vermelho
           Green: Arc verde
+          Gray: Arc cinza
         ArcAlt: 
           Name: Arc (alt)
           Blue: Arc azul
           Red: Arc vermelho
           Green: Arc verde
+          Gray: Arc cinza
         Sky: Sky
         Tap: Tap
         Hold: Hold
@@ -682,6 +684,7 @@ Compose:
         Blue: Azul (0)
         Red: Vermelho (1)
         Green: Verde (2)
+        Gray: Cinza (3)
         Custom: Personalizado ({0})
         AddArcColor: Adicionar cor da arc
         NoProjectLoaded: |-

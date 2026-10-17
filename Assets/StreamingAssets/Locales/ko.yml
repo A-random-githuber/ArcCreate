@@ -524,6 +524,7 @@ Compose:
         Blue: 파랑
         Red: 빨강
         Green: 초록
+        Gray: 회색
         Custom: 커스텀
         AddArcColor: 아크 색 추가
         NoProjectLoaded: |-
