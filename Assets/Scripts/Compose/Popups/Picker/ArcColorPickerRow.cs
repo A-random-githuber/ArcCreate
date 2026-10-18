@@ -61,6 +61,9 @@ namespace ArcCreate.Compose.Popups
                 case 2:
                     label.text = I18n.S("Compose.UI.Project.Label.Green");
                     break;
+                case 3:
+                    label.text = I18n.S("Compose.UI.Project.Label.Gray");
+                    break;
                 default:
                     label.text = I18n.S("Compose.UI.Project.Label.Custom", datum.Id);
                     break;
